@@ -1,53 +1,17 @@
-%current_date = datestr(date,'yyyy-mm-dd');
-clearvars -except w;
-clc;
-fields = 'close, volume, amt, oi';
 
+%% PART1 根据P/C情绪指标进行多空判断
+% option.mat中的数据主要存储在database结构体中，Date表示日期，Data_Call表示当天所有的看涨期权的收盘价、成交量、成交额和持仓量
+load option.mat;
 
-start_time = '2015-09-01';
-end_time = '2016-04-01';
-w = windmatlab;
-[days_count,w_tdays_codes,w_tdays_fields,w_tdays_times,w_tdays_errorid,w_tdays_reqid] = w.tdayscount(start_time, end_time);
-database(days_count,1) = struct('Date',[],'Data_Call',zeros(40,1),'Codes_Call',[],'Data_Put',zeros(40,1),'Codes_Put',[]);
-
-
-for j = 1:days_count
-  tic;
-  [current_date,w_tdays_codes,w_tdays_fields,w_tdays_times,w_tdays_errorid,w_tdays_reqid]=w.tdaysoffset(j,start_time);
-  current_date = datestr(current_date, 'yyyymmdd');
-  display(j);
-  [w_wset_data_call,w_wset_codes,w_wset_fields,w_wset_times,w_wset_errorid,w_wset_reqid]=w.wset('optionchain',['date=',current_date],'us_code=510050.SH;option_var=全部;month=全部;call_put=认购');
-  [w_wset_data_put,w_wset_codes,w_wset_fields,w_wset_times,w_wset_errorid,w_wset_reqid]=w.wset('optionchain',['date=',current_date],'us_code=510050.SH;option_var=全部;month=全部;call_put=认沽');
-  
-  w_wsd_data_call = zeros(size(w_wset_data_call,1), 4);
-  w_wsd_data_put = zeros(size(w_wset_data_put,1), 4);
-  w_wsd_codes_call = cell(size(w_wset_data_call,1), 1);
-  w_wsd_codes_put = cell(size(w_wset_data_put,1), 1);
-
-  for i = 1:size(w_wset_data_call,1)
-     display(i);
-     [w_wsd_data_call(i,:),w_wsd_codes_call(i,:),w_wsd_fields,w_wsd_times,w_wsd_errorid,w_wsd_reqid]=w.wsd(w_wset_data_call(i,4), fields, current_date, current_date);
-     [w_wsd_data_put(i,:),w_wsd_codes_put(i,:),w_wsd_fields,w_wsd_times,w_wsd_errorid,w_wsd_reqid]=w.wsd(w_wset_data_put(i,4), fields, current_date, current_date);
-  end
-  
-  database(j).Date = current_date;
-  database(j).Data_Call = w_wsd_data_call;
-  database(j).Data_Put = w_wsd_data_put;
-  database(j).Codes_Call = w_wsd_codes_call;
-  database(j).Codes_Put = w_wsd_codes_put;
-  toc;
-end
-
-
-%% 计算每日看涨看跌期权的成交量、持仓量、成交额等
+% 计算每日看涨看跌期权的成交量、持仓量、成交额等
 N = size(database,2);
-Volume_Call = zeros(N,1);
+Volume_Call = zeros(N,1); % 成交量
 Volume_Put = zeros(N,1);
 
-AMT_Call = zeros(N,1);
+AMT_Call = zeros(N,1); % 成交额
 AMT_Put = zeros(N,1);
 
-Pos_Call = zeros(N,1);
+Pos_Call = zeros(N,1); % 持仓量
 Pos_Put = zeros(N,1);
 
 for i = 1:N
@@ -66,6 +30,7 @@ Pos = Pos_Call + Pos_Put;
 Volume_Ratio = Volume_Put ./ Volume_Call;
 AMT_Ratio = AMT_Put ./ AMT_Call;
 Pos_Ratio = Pos_Put ./ Pos_Call;
+
 
 %% 绘图观察相关性
 h = figure;
