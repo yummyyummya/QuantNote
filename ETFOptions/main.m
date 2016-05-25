@@ -130,24 +130,15 @@ result4 = ols(y,x);
 prt(result4);
 
 
-%% 绘制ETF价格
-% 考虑动量因素
-[data, text] = xlsread('50ETF.xlsx');
-figure;
-plot(time, data(:,4),'LineWidth',1.5);
-axis = gca;
-axis.XTickLabel = datestr(axis.XTick, 'yy-mm-dd');
-
-
 %% 期现套利
 [c1,c2,c3,c4,c5,Future_Price,c7] = textread('CFFEX.txt','%s %s %f %f %f %f %f','delimiter',',');
 figure;
-[h, ax1, ax2] = plotyy([1:229], Future_Price(1:229), [1:229], ETF_Price);
+[h, ax1, ax2] = plotyy([1:239], Future_Price, [1:239], ETF_Price);
 ax1.LineWidth = 1.5;
 ax2.LineWidth = 1.5;
 
 % 期货收益率与现货收益率的差价比较
-Diff = price2ret(Future_Price(1:229)) - price2ret(ETF_Price);
+Diff = price2ret(Future_Price) - price2ret(ETF_Price);
 figure;
 bar(Diff);
 axis = gca;
